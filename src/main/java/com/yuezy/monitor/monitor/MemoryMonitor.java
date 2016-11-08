@@ -1,7 +1,11 @@
 package com.yuezy.monitor.monitor;
 
+import com.yuezy.monitor.entity.Memory;
+import com.yuezy.monitor.util.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+
 
 import javax.management.MBeanServerConnection;
 import javax.management.remote.JMXConnector;
@@ -20,11 +24,12 @@ import java.util.concurrent.TimeUnit;
 public class MemoryMonitor {
 
     @Autowired
+    @Qualifier("mBeanServerConnection")
     private MBeanServerConnection mBeanServerConnection;
 
     private final int delay = 0;
 
-    private final int inteval = 30;
+    private final int inteval = 3;
 
     private final TimeUnit timeUnit = TimeUnit.SECONDS;
 
@@ -34,48 +39,34 @@ public class MemoryMonitor {
         this.memoryMonitor.scheduleAtFixedRate(new MemoryMonitorRunnable(),this.delay,this.inteval,this.timeUnit);
     }
 
-    private static String convertKB(long src) {
-
-        if (src <= 0L) {
-            return "0KB";
-        }
-        return (double) src / 1024 + "KB";
-    }
-
     private class MemoryMonitorRunnable implements Runnable {
+
+        private MemoryMXBean memoryMXBean = null;
 
         @Override
         public void run() {
-            try {
-                MemoryMXBean memoryMXBean = ManagementFactory
-                        .newPlatformMXBeanProxy(mBeanServerConnection,
-                                ManagementFactory.MEMORY_MXBEAN_NAME,
-                                MemoryMXBean.class);
-
-                MemoryUsage heapMemoryUsage = memoryMXBean.getHeapMemoryUsage();
-                System.out.println("heapMemoryUsage :");
-                System.out.println("committed = "
-                        + convertKB(heapMemoryUsage.getCommitted()));
-                System.out
-                        .println("init = " + convertKB(heapMemoryUsage.getInit()));
-                System.out.println("max = " + convertKB(heapMemoryUsage.getMax()));
-                System.out
-                        .println("used = " + convertKB(heapMemoryUsage.getUsed()));
-
-                MemoryUsage nonHeapMemoryUsage = memoryMXBean
-                        .getNonHeapMemoryUsage();
-                System.out.println("\nnonHeapMemoryUsage :");
-                System.out.println("committed = "
-                        + convertKB(nonHeapMemoryUsage.getCommitted()));
-                System.out.println("init = "
-                        + convertKB(nonHeapMemoryUsage.getInit()));
-                System.out.println("max = "
-                        + convertKB(nonHeapMemoryUsage.getMax()));
-                System.out.println("used = "
-                        + convertKB(nonHeapMemoryUsage.getUsed()));
-            } catch (IOException e) {
-                e.printStackTrace();
+            //MemoryMXBean memoryMXBean = null;
+            if(mBeanServerConnection == null){
+                return ;
             }
+            try {
+                if(this.memoryMXBean == null){
+                    this.memoryMXBean = ManagementFactory.newPlatformMXBeanProxy(mBeanServerConnection,
+                            ManagementFactory.MEMORY_MXBEAN_NAME,
+                            MemoryMXBean.class);
+                }
+
+            } catch (Exception e) {
+                System.out.println(e.toString());
+            }
+                MemoryUsage heapMemoryUsage = memoryMXBean.getHeapMemoryUsage();
+                Memory memory = new Memory();
+                memory.setCommitted(Utils.convertKB(heapMemoryUsage.getCommitted()));
+                memory.setInit(Utils.convertKB(heapMemoryUsage.getInit()));
+                memory.setMax(Utils.convertKB(heapMemoryUsage.getMax()));
+                memory.setUsed(Utils.convertKB(heapMemoryUsage.getUsed()));
+                System.out.println(Utils.convertKB(heapMemoryUsage.getUsed()));
+
         }
     }
 
