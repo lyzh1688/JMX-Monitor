@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by 胡志洁 on 2016/11/6.
  */
-@Component
+
 public class ClassLoadingMXBeanMonitor {
 
     @Autowired
