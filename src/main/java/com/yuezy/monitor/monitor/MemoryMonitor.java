@@ -1,6 +1,8 @@
 package com.yuezy.monitor.monitor;
 
+import com.icbc.sh4b.monitor.persistence.DbUtil;
 import com.yuezy.monitor.entity.Memory;
+import com.yuezy.monitor.entity.Time;
 import com.yuezy.monitor.util.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -13,6 +15,7 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
+import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -20,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by 胡志洁 on 2016/11/6.
  */
-@Component
+//@Component
 public class MemoryMonitor {
 
     @Autowired
@@ -29,7 +32,7 @@ public class MemoryMonitor {
 
     private final int delay = 0;
 
-    private final int inteval = 3;
+    private final int inteval = 2;
 
     private final TimeUnit timeUnit = TimeUnit.SECONDS;
 
@@ -59,13 +62,23 @@ public class MemoryMonitor {
             } catch (Exception e) {
                 System.out.println(e.toString());
             }
-                MemoryUsage heapMemoryUsage = memoryMXBean.getHeapMemoryUsage();
-                Memory memory = new Memory();
+            	Memory memory = new Memory();
+               /* MemoryUsage heapMemoryUsage = memoryMXBean.getHeapMemoryUsage();
                 memory.setCommitted(Utils.convertKB(heapMemoryUsage.getCommitted()));
                 memory.setInit(Utils.convertKB(heapMemoryUsage.getInit()));
                 memory.setMax(Utils.convertKB(heapMemoryUsage.getMax()));
-                memory.setUsed(Utils.convertKB(heapMemoryUsage.getUsed()));
-                System.out.println(Utils.convertKB(heapMemoryUsage.getUsed()));
+                memory.setUsed(Utils.convertKB(heapMemoryUsage.getUsed()));*/
+                
+                MemoryUsage heapMs = memoryMXBean.getHeapMemoryUsage();
+        		MemoryUsage nonHeapMs = memoryMXBean.getNonHeapMemoryUsage();
+        		memory.setCommitted(Utils.convertKB(heapMs.getCommitted() + nonHeapMs.getCommitted()));
+        		memory.setMax(Utils.convertKB(heapMs.getMax() + nonHeapMs.getMax()));
+        		memory.setUsed(Utils.convertKB(heapMs.getUsed() + nonHeapMs.getUsed()));
+                memory.setTime(new Time(new Date()));
+                System.out.println(memory.toString());
+                DbUtil.saveToDb(memory);
+                
+                //System.out.println(Utils.convertKB(heapMemoryUsage.getUsed()));
 
         }
     }

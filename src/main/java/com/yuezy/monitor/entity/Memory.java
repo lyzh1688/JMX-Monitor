@@ -7,8 +7,16 @@ public class Memory {
     public double getCommitted() {
         return committed;
     }
+    
+    public Time getTime() {
+		return time;
+	}
 
-    public void setCommitted(double committed) {
+	public void setTime(Time time) {
+		this.time = time;
+	}
+
+	public void setCommitted(double committed) {
         this.committed = committed;
     }
 
@@ -35,9 +43,20 @@ public class Memory {
     public void setUsed(double used) {
         this.used = used;
     }
+    
+    
 
-    private double committed;
+    @Override
+	public String toString() {
+		return "Memory [committed=" + committed + ", init=" + init + ", max=" + max + ", used=" + used + ", time="
+				+ time.toString() + "]";
+	}
+
+
+
+	private double committed;
     private double init;
     private double max;
     private double used;
+    private Time time;
 }
